@@ -138,7 +138,7 @@ class APIMaker {
 		$summary = array(
 			'total' => $rows_count, 
 			'per_page' => $per_page, 
-			'page' => ($page+1), //(($page/$per_page)+1), 
+			'page' => ($page+1), 
 			'pages' => ceil($rows_count/$per_page), 
 			'start' => $start, 
 			'end' => isset($end) ? $end : $rows_count
