@@ -54,10 +54,10 @@
 	</filter>
 	<withResult>
 		<field>				
-			<objectName>name</objectName>				
+			<objectName>country</objectName>				
 			<function>replace</function>
-			<find>mike</find>				
-			<replace>Sir Mike</replace>				
+			<find>Australia</find>				
+			<replace>Australia</replace>				
 		</field>
 		<field>				
 			<objectName>date</objectName>					
@@ -76,10 +76,13 @@
 	</errorMsg>
 	<template>
 		<![CDATA[
+			<h1>Basic HTML results</h1>
+
 			{{#summary}} 
-				<p>Page {{page}} of {{pages}}, Showing ({{start}} - {{end}}) of {{total}} </p>
+				<p><em>Page {{page}} of {{pages}}, Showing ({{start}} - {{end}}) of {{total}}</em></p>
 			{{/summary}}
-			<table>
+			
+			<table class="table table-striped">
 			{{#results}}
 				<tr>
 					<td>{{id}}</td>
