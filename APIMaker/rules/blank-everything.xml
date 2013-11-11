@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<config table="example" resultsPerPage="" recordsAllowed="" format="" mime="">
+	<filter>
+		<group operator="AND">
+			<field>
+				<objectName></objectName>
+				<formName></formName>
+				<defaultValue></defaultValue>	
+				<condition></condition>
+			</field>
+		</group>
+	</filter>
+	<withResult>
+		<field>				
+			<objectName></objectName>				
+			<function>replace</function>
+			<find></find>				
+			<replace></replace>				
+		</field>
+		<field>
+			<objectName></objectName>					
+			<function>formatDate</function>			
+			<format></format>				
+		</field>
+		<field>
+			<objectName></objectName>					
+			<function>jsonEncode</function>				
+		</field>
+		<field>
+			<objectName></objectName>					
+			<function>htmlEscape</function>				
+		</field>
+	</withResult>
+	<sort>
+		<objectName></objectName>
+		<sortDirection></sortDirection>
+	</sort>
+	<errorMsg>
+		<![CDATA[
+		]]>
+	</errorMsg>
+	<template>
+		<![CDATA[
+		]]>
+	</template>
+</config>

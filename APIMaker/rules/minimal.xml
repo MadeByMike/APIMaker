@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<config table="example">
+	<filter>
+		<group>
+		</group>
+	</filter>
+	<template>
+		<![CDATA[
+		<p>This is basically select * from `table_name`.</p>
+		<p>Showing all id values:</p>
+		{{#results}}
+		<p>{{id}}</p>
+		{{/results}}
+		]]>
+	</template>
+</config>
