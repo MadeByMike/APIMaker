@@ -7,6 +7,7 @@ class APIMaker {
 		// Merge options
 		$defaults = array(
 			'config_path' => dirname(__FILE__),
+			'rules' => '',
 			'echo' => true
 		);
 		ob_start();
@@ -51,10 +52,16 @@ class APIMaker {
 	}
 
 	function load_rules_file(){
-		$get_rules = isset($_REQUEST['rules']) ? $_REQUEST['rules'] : false;
+		if($this->options['rules']){
+			$get_rules = $this->options['rules'];
+		}else{
+			$get_rules = isset($_REQUEST['rules']) ? $_REQUEST['rules'] : false;
+		}
 		if(!$get_rules) {
-			$this->debug->log('No rules file','error');
-			$this->throw_error();
+			if(!$get_rules) {
+				$this->debug->log('No rules file','error');
+				$this->throw_error();
+			}
 		}
 		$get_rules = urldecode($get_rules);
 		if(preg_match("/[^A-Za-z0-9-_]/", $get_rules)){
@@ -131,12 +138,12 @@ class APIMaker {
 
 		//Create a results object
 		$summary = array(
-			'total' => $rows_count, 
-			'per_page' => $per_page, 
-			'page' => ($page+1), 
-			'pages' => ceil($rows_count/$per_page), 
-			'start' => $start, 
-			'end' => isset($end) ? $end : $rows_count
+			'total' => (int)$rows_count, 
+			'per_page' => (int)$per_page, 
+			'page' => (int)($page+1), 
+			'pages' => (int)ceil($rows_count/$per_page), 
+			'start' => (int)$start, 
+			'end' => (int)(isset($end) ? $end : $rows_count)
 		);
 		$this->results = (object) array('summary'=> $summary, 'results' => $results);
 		if(isset($this->rules_file->withResult)){
@@ -213,12 +220,27 @@ class APIMaker {
 		foreach($group->children() as $child){
 			if($child->getName() == 'field'){
 				if(isset($child->formName)){
-					$match = isset($_REQUEST["{$child->formName}"] ) ? $_REQUEST["{$child->formName}"] : $child->defaultValue;
+					$match = (isset($_REQUEST["{$child->formName}"]) && $_REQUEST["{$child->formName}"] != '') ? $_REQUEST["{$child->formName}"] : $child->defaultValue;
 				} else {
 					$match = $child->defaultValue;
 				}
+				$match = (string) $match;
 				
-				$match = (string)($match);
+				if($child->attributes()->required && (!$match || $match == '')){
+					$this->debug->log('Required field '.$child->objectName.' missing', 'error');
+					$this->throw_error();
+				}
+				
+				//Attempt to select the correct type for exact matches in PDO
+                if(is_numeric($match)){
+					if($match % 1 === 0){
+						settype($match, 'integer');
+					} else {
+						settype($match, 'float');
+					}
+                }else{
+                    settype($match, 'string');
+                }
 				if($match != ''){
 					if($f > 0 && $query_part != ''){
 						//This is the operator between fields

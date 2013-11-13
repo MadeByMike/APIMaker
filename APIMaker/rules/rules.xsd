@@ -5,11 +5,12 @@
 		<xs:element name="field" maxOccurs="unbounded" minOccurs="1">
 		  <xs:complexType>
 			<xs:sequence>
-			  <xs:element type="xs:string" name="objectName" minOccurs="1"/>
-			  <xs:element type="xs:string" name="formName"/>
-			  <xs:element type="xs:string" name="defaultValue"/>
-			  <xs:element type="xs:string" name="condition" minOccurs="1"/>
+			  <xs:element type="xs:string" name="objectName" minOccurs="1" maxOccurs="1"/>
+			  <xs:element type="xs:string" name="formName" minOccurs="0" maxOccurs="1"/>
+			  <xs:element type="xs:string" name="defaultValue" minOccurs="0" maxOccurs="1"/>
+			  <xs:element type="xs:string" name="condition" minOccurs="1"  maxOccurs="1"/>
 			</xs:sequence>
+			<xs:attribute type="xs:string" name="required" />
 		  </xs:complexType>
 		</xs:element>
 		<xs:element ref="group" minOccurs="0" maxOccurs="unbounded" />
