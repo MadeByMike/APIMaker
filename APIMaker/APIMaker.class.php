@@ -33,21 +33,21 @@ class APIMaker {
 			$this->db = new PDO('mysql:host='. DB_HOST .';dbname='. DB_NAME .';charset=utf8', DB_USERNAME, DB_PASSWORD);
 			$this->db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 			$this->db->setAttribute(PDO::ATTR_EMULATE_PREPARES, FALSE); // Emulated prepare wrongly encapsulates Limit and Order values
-		} catch(PDOException $exc) {
+			$this->init();
+			$this->template_resuls = ob_get_contents();
+			if($this->options['echo']){
+				if($this->rules_file->attributes()->mime || ($this->rules_file->attributes()->format == "json") ){
+					header("Content-Type: ".$this->rules_file->attributes()->mime);
+				}
+				ob_end_flush();
+			}else{
+				ob_end_clean();
+			}
+		} catch(Exception $exc) {
 			$this->debug->log($exc->getMessage(),'error');
 	 		$this->throw_error();
 		}
 
-		$this->init();
-		$this->template_resuls = ob_get_contents();
-		if($this->options['echo']){
-			if($this->rules_file->attributes()->mime || ($this->rules_file->attributes()->format == "json") ){
-	 			header("Content-Type: ".$this->rules_file->attributes()->mime);
-	 		}
-			ob_end_flush();
-		}else{
-			ob_end_clean();
-		}
 	}
 
 	function load_rules_file(){
@@ -68,7 +68,14 @@ class APIMaker {
 		}
 	}
 	function validate_rules_file(){
-		//ToDo: there are some key required components in the xml rules file.
+		$xml = new DOMDocument();
+		libxml_use_internal_errors(true);
+		$xml->loadXML($this->rules_file->asXML());
+		if(!$xml->schemaValidate(RULES_PATH . 'rules.xsd')){
+			$errors = libxml_get_errors(); 
+			$this->debug->log('XML rules file did not validate','error');
+			$this->throw_error();
+		}
 	}
 	function get_results(){
 
@@ -90,16 +97,11 @@ class APIMaker {
 		$this->debug->log('Count sql: ' .$sql_count, 'info');
 		$this->debug->log('Prepared variables:');
 		$this->debug->log($groups->query_values, 'info');
-		try {
-			$count = $this->db->prepare($sql_count);
-			$count->execute($groups->query_values);
-			$rows_count = $count->fetchColumn();
-			$per_page = $rows_count;
-		} catch(PDOException $exc) {
-			$this->debug->log($exc->getMessage(),'error');
-			$this->debug->log($exc->getTrace(),'error');
-			$this->throw_error();
-		}
+		$count = $this->db->prepare($sql_count);
+		$count->execute($groups->query_values);
+		$rows_count = $count->fetchColumn();
+		$per_page = $rows_count;
+		
 		if($this->rules_file->attributes()->resultsPerPage){
 			$per_page = (int) $this->rules_file->attributes()->resultsPerPage;
 			$page = isset($_REQUEST['page']) ? $_REQUEST['page'] : 0;
@@ -123,16 +125,9 @@ class APIMaker {
 		$this->debug->log('Prepared sql: ' .$sql_select . ' ' . $sql_where . ' ' . $sql_sort . ' ' . $sql_limit, 'info');
 		$this->debug->log('Prepared variables:');
 		$this->debug->log($groups->query_values, 'info');
-		
-		try {
-			$prepare = $this->db->prepare($sql_select . ' ' . $sql_where . ' ' . $sql_sort . ' ' .$sql_limit);
-			$prepare->execute($groups->query_values);
-			$results = $prepare->fetchAll(PDO::FETCH_ASSOC);
-		} catch(PDOException $exc) {
-			$this->debug->log($exc->getMessage(),'error');
-			$this->debug->log($exc->getTrace(),'error');
-			$this->throw_error();
-		}
+		$prepare = $this->db->prepare($sql_select . ' ' . $sql_where . ' ' . $sql_sort . ' ' .$sql_limit);
+		$prepare->execute($groups->query_values);
+		$results = $prepare->fetchAll(PDO::FETCH_ASSOC);
 
 		//Create a results object
 		$summary = array(
@@ -162,12 +157,7 @@ class APIMaker {
 		$this->validate_rules_file();
 		$this->get_results();
 		// Render template
-		try {
-			echo $this->render();
-		} catch(Exception $stacheError) {
-			$this->debug->log('Template error: ' . $stacheError->getMessage(), 'error');
-			$this->throw_error();
-		}
+		echo $this->render();
 	}	
 	function with_result($with_result, $rows){
 		foreach($with_result as $child){

@@ -1,0 +1,77 @@
+<xs:schema attributeFormDefault="unqualified" elementFormDefault="qualified" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+  <xs:element name="group">
+	<xs:complexType>
+	  <xs:sequence>
+		<xs:element name="field" maxOccurs="unbounded" minOccurs="1">
+		  <xs:complexType>
+			<xs:sequence>
+			  <xs:element type="xs:string" name="objectName" minOccurs="1"/>
+			  <xs:element type="xs:string" name="formName"/>
+			  <xs:element type="xs:string" name="defaultValue"/>
+			  <xs:element type="xs:string" name="condition" minOccurs="1"/>
+			</xs:sequence>
+		  </xs:complexType>
+		</xs:element>
+		<xs:element ref="group" minOccurs="0" maxOccurs="unbounded" />
+	  </xs:sequence>
+	  <xs:attribute type="xs:string" name="operator" />
+	</xs:complexType>
+  </xs:element>
+  <xs:element name="config">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element name="filter" maxOccurs="1" minOccurs="1">
+          <xs:complexType>
+            <xs:sequence>
+			<xs:element ref="group" minOccurs="1" maxOccurs="unbounded" />
+            </xs:sequence>
+          </xs:complexType>
+        </xs:element>
+        <xs:element name="withResult" maxOccurs="1" minOccurs="0">
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element name="field" maxOccurs="unbounded" minOccurs="1">
+                <xs:complexType>
+                  <xs:sequence>
+                    <xs:element type="xs:string" name="objectName" minOccurs="1" maxOccurs="1" />
+                    <xs:element type="xs:string" name="function" minOccurs="1" maxOccurs="1" />
+                    <xs:element type="xs:string" name="find" minOccurs="0" maxOccurs="1" />
+                    <xs:element type="xs:string" name="replace" minOccurs="0" maxOccurs="1" />
+                    <xs:element type="xs:string" name="format" minOccurs="0" maxOccurs="1" />
+                  </xs:sequence>
+                </xs:complexType>
+              </xs:element>
+            </xs:sequence>
+          </xs:complexType>
+        </xs:element>
+        <xs:element name="sort" maxOccurs="1" minOccurs="0">
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element type="xs:string" name="objectName" maxOccurs="1" minOccurs="1" />
+              <xs:element type="xs:string" name="sortDirection" maxOccurs="1" minOccurs="1" />
+            </xs:sequence>
+          </xs:complexType>
+        </xs:element>
+        <xs:element name="errorMsg" maxOccurs="1" minOccurs="0">
+          <xs:complexType mixed="true">
+			<xs:sequence>
+				<xs:any minOccurs="0" maxOccurs="unbounded"/>
+			</xs:sequence>
+          </xs:complexType>
+		</xs:element>
+        <xs:element name="template" maxOccurs="1" minOccurs="0">
+          <xs:complexType mixed="true">
+			<xs:sequence>
+				<xs:any minOccurs="0" maxOccurs="unbounded" />
+			</xs:sequence>
+          </xs:complexType>
+		</xs:element>
+      </xs:sequence>
+      <xs:attribute type="xs:string" name="table" use="required" />
+      <xs:attribute type="xs:string" name="resultsPerPage" />
+      <xs:attribute type="xs:string" name="recordsAllowed" />
+      <xs:attribute type="xs:string" name="format" />
+      <xs:attribute type="xs:string" name="mime" />
+    </xs:complexType>
+  </xs:element>
+</xs:schema>
