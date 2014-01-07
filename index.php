@@ -26,6 +26,9 @@
 			<li><a href="./API/JSON/JSON-basic">JSON basic</a></li>
 			<li><a href="./API/XML/XML-basic">XML basic</a></li>
 		</ul>
+		<ul>
+			<li><a href="./simple-site/?page=1">A simple website</a></li>
+		</ul>
 
 		<h2>Setup</h2>
 		<p>Extract the sample code to your desired location.</p>

@@ -1,6 +1,4 @@
 <?php
-
-
 class APIMaker {
 
 	function __construct($options = false){
@@ -81,25 +79,70 @@ class APIMaker {
 		if(!$xml->schemaValidate(RULES_PATH . 'rules.xsd')){
 			$errors = libxml_get_errors(); 
 			$this->debug->log('XML rules file did not validate','error');
+			$this->debug->log($errors ,'error');
 			$this->throw_error();
 		}
 	}
 	function get_results(){
 
 		$groups = $this->process_groups($this->rules_file->filter->group);
-		
+		$sql_select = '';
+		$sql_from = '';
 		$sql_limit = '';
 		$sql_sort = '';
+		$sql_join = '';
 		$page = 0;
 		$start = 0;
-		
-		$sql_select = 'SELECT * FROM `' . $this->rules_file->attributes()->table .'`';
-		$sql_count = 'SELECT COUNT(*) FROM `' . $this->rules_file->attributes()->table .'`';
+		$tables = explode(',',$this->rules_file->attributes()->table);
+		foreach($tables as $table){
+			$sql_from .= '`'. $table .'`, ';
+		}
+		$sql_from = rtrim($sql_from, ' ');
+		$sql_from = rtrim($sql_from, ',');
+		if($this->rules_file->select){
+			foreach($this->rules_file->select->children() as $child){
+				if($child->attributes()->table ){
+					$sql_select .= $child->attributes()->table .'.'. $child .', ';
+				}else{
+					$sql_select .= $tables[0] . '.' . $child .', ';
+				}
+			}
+			$sql_select = rtrim($sql_select, ' ');
+			$sql_select = rtrim($sql_select, ',');
+		} else {
+			$sql_select = '*';
+		}
+		if($this->rules_file->join){
+			if($this->rules_file->join->attributes()->type){
+				$sql_join .= $this->rules_file->join->attributes()->type .' JOIN ';
+			} else {
+				$sql_join .= 'LEFT JOIN ';
+			}
+			$sql_join .= $this->rules_file->join->attributes()->table .' ON ';
+			if($this->rules_file->join->objectName[0]->attributes()->table ){
+				$sql_join .= $this->rules_file->join->objectName[0]->attributes()->table .'.'. $this->rules_file->join->objectName[0];
+			}else{
+				$sql_join .= $this->rules_file->join->objectName[0];
+			}
+			$sql_join .= ' = ';
+			if($this->rules_file->join->objectName[0]->attributes()->table ){
+				$sql_join .= $this->rules_file->join->objectName[1]->attributes()->table .'.'. $this->rules_file->join->objectName[1];
+			}else{
+				$sql_join .= $this->rules_file->join->objectName[1];
+			}
+		}
+		$sql_count = 'SELECT count(*) FROM ' . $sql_from  .' '. $sql_join;
+		$sql_select = 'SELECT '. $sql_select .' FROM ' . $sql_from  .' '. $sql_join;
 		$sql_where = ($groups->query_part == '') ? '' : 'WHERE ' . $groups->query_part;
 		$sql_count .= ' '. $sql_where;
 
 		if($this->rules_file->sort){
-			$sql_sort = 'ORDER BY ' . $this->rules_file->sort->objectName . ' ' . $this->rules_file->sort->sortDirection;
+			if($this->rules_file->sort->objectName->attributes()->table ){
+				$table = $this->rules_file->sort->objectName->attributes()->table .'.';
+			}else{
+				$table = '';
+			}
+			$sql_sort = 'ORDER BY ' . $table . $this->rules_file->sort->objectName . ' ' . $this->rules_file->sort->sortDirection;
 		}
 		$this->debug->log('Count sql: ' .$sql_count, 'info');
 		$this->debug->log('Prepared variables:');
@@ -107,22 +150,25 @@ class APIMaker {
 		$count = $this->db->prepare($sql_count);
 		$count->execute($groups->query_values);
 		$rows_count = $count->fetchColumn();
+		if($rows_count == 0){
+			$this->debug->log('No results found','error');
+	 		$this->throw_error();		
+		}
 		$per_page = $rows_count;
 		
 		if($this->rules_file->attributes()->resultsPerPage){
 			$per_page = (int) $this->rules_file->attributes()->resultsPerPage;
-			$page = isset($_REQUEST['page']) ? $_REQUEST['page'] : 0;
-			if(!is_numeric($page)){
-				$this->debug->log('Non-numeric value for page', 'warning');
-				$start = 0;
+			$pages = ceil($rows_count/$per_page);
+			$page = isset($_REQUEST['page']) ? $_REQUEST['page'] : 1;
+			if(!is_numeric($page) || !($page>0 && $page<=$pages) ){
+				$this->debug->log('Invalid value for page', 'warning');
+				$page = 1;
 			}
-			if($page>0){
-				$start = ($page-1) * $per_page;
-			} else{
-				$start = 0;
-			}
+			$start = ($page-1) * $per_page;
+			
 			array_push($groups->query_values, $start);
 			$sql_limit = 'LIMIT ?, ' . $per_page;
+			$end = $start + $per_page;
 		}else if($this->rules_file->attributes()->recordsAllowed){
 			$per_page = $this->rules_file->attributes()->recordsAllowed;
 			$end = $this->rules_file->attributes()->recordsAllowed;
@@ -135,14 +181,13 @@ class APIMaker {
 		$prepare = $this->db->prepare($sql_select . ' ' . $sql_where . ' ' . $sql_sort . ' ' .$sql_limit);
 		$prepare->execute($groups->query_values);
 		$results = $prepare->fetchAll(PDO::FETCH_ASSOC);
-
 		//Create a results object
 		$summary = array(
 			'total' => (int)$rows_count, 
 			'per_page' => (int)$per_page, 
-			'page' => (int)($page+1), 
-			'pages' => (int)ceil($rows_count/$per_page), 
-			'start' => (int)$start, 
+			'page' => (int)($page), 
+			'pages' => (int)$pages, 
+			'start' => (int)$start+1, 
 			'end' => (int)(isset($end) ? $end : $rows_count)
 		);
 		$this->results = (object) array('summary'=> $summary, 'results' => $results);
@@ -246,6 +291,9 @@ class APIMaker {
 						//This is the operator between fields
 						$query_part .= ' ' . $operator . ' ';						
 					}
+					if($child->objectName->attributes()->table ){
+						$query_part .= $child->objectName->attributes()->table .'.';
+					}
 					$query_part .= (string)($child->objectName);
 					switch ($child->condition) {
 						case "equals":
@@ -334,7 +382,7 @@ class debug {
 	public function log ($obj, $typ=''){
 		if(isset($_REQUEST['debug']) && APP_DEBUG){
 			/**
-			 * Send debug info to the Javascript console
+			 * Send debug info to the JavaScript console
 			 */ 
 		    if($typ == 'error'){
 			    if(is_array($obj) || is_object($obj)){

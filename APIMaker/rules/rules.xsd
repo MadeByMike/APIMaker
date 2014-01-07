@@ -5,7 +5,7 @@
 		<xs:element name="field" maxOccurs="unbounded" minOccurs="1">
 		  <xs:complexType>
 			<xs:sequence>
-			  <xs:element type="xs:string" name="objectName" minOccurs="1" maxOccurs="1"/>
+			  <xs:element type="custom_type_table_attribute" name="objectName" minOccurs="1" maxOccurs="1"/>
 			  <xs:element type="xs:string" name="formName" minOccurs="0" maxOccurs="1"/>
 			  <xs:element type="xs:string" name="defaultValue" minOccurs="0" maxOccurs="1"/>
 			  <xs:element type="xs:string" name="condition" minOccurs="1"  maxOccurs="1"/>
@@ -18,9 +18,37 @@
 	  <xs:attribute type="xs:string" name="operator" />
 	</xs:complexType>
   </xs:element>
+
+  <xs:complexType name="custom_type_table_attribute">
+   <xs:simpleContent>
+  	<xs:extension base="xs:string">
+  	  <xs:attribute name="table" type="xs:string" />
+	  <xs:attribute name="as" type="xs:string" />
+  	</xs:extension>
+    </xs:simpleContent>
+  </xs:complexType>
+  
   <xs:element name="config">
     <xs:complexType>
       <xs:sequence>
+	  
+        <xs:element name="select" maxOccurs="1" minOccurs="0">
+          <xs:complexType>
+            <xs:sequence>
+			<xs:element type="custom_type_table_attribute" name="objectName" minOccurs="2" maxOccurs="unbounded" />
+            </xs:sequence>
+          </xs:complexType>
+        </xs:element>
+		
+        <xs:element name="join" maxOccurs="1" minOccurs="0">
+          <xs:complexType>
+            <xs:sequence>
+			<xs:element type="custom_type_table_attribute" name="objectName" minOccurs="2" maxOccurs="2" />
+            </xs:sequence>
+			<xs:attribute name="table" type="xs:string" use="required" />
+			<xs:attribute name="type" type="xs:string" />
+          </xs:complexType>
+        </xs:element>
         <xs:element name="filter" maxOccurs="1" minOccurs="1">
           <xs:complexType>
             <xs:sequence>
@@ -34,7 +62,7 @@
               <xs:element name="field" maxOccurs="unbounded" minOccurs="1">
                 <xs:complexType>
                   <xs:sequence>
-                    <xs:element type="xs:string" name="objectName" minOccurs="1" maxOccurs="1" />
+                    <xs:element type="custom_type_table_attribute" name="objectName" minOccurs="1" maxOccurs="1" />
                     <xs:element type="xs:string" name="function" minOccurs="1" maxOccurs="1" />
                     <xs:element type="xs:string" name="find" minOccurs="0" maxOccurs="1" />
                     <xs:element type="xs:string" name="replace" minOccurs="0" maxOccurs="1" />
@@ -48,7 +76,7 @@
         <xs:element name="sort" maxOccurs="1" minOccurs="0">
           <xs:complexType>
             <xs:sequence>
-              <xs:element type="xs:string" name="objectName" maxOccurs="1" minOccurs="1" />
+			  <xs:element name="objectName" maxOccurs="1" minOccurs="1" type="custom_type_table_attribute"/>
               <xs:element type="xs:string" name="sortDirection" maxOccurs="1" minOccurs="1" />
             </xs:sequence>
           </xs:complexType>

@@ -1,9 +1,25 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <config table="example" resultsPerPage="20" recordsAllowed="100">
+	<select>
+		<objectName table="example">id</objectName>
+		<objectName table="jointest">example_id</objectName>
+		<objectName table="example" >name</objectName>
+		<objectName table="example" >email</objectName>
+		<objectName table="example" >address</objectName>
+		<objectName table="example" >lorem</objectName>
+		<objectName table="example" >date</objectName>
+		<objectName table="example" >country</objectName>
+		<objectName table="example" >latlng</objectName>
+		<objectName table="jointest" >meta</objectName>
+	</select>
+	<join table="jointest" type="left">
+		<objectName table="example">id</objectName>
+		<objectName table="jointest">example_id</objectName>	
+	</join>
 	<filter>
 		<group>
 			<field>
-				<objectName>id</objectName>
+				<objectName table="example">id</objectName>
 				<formName>id</formName>
 				<defaultValue></defaultValue>	
 				<condition>equals</condition>
@@ -66,7 +82,7 @@
 		</field>
 	</withResult>
 	<sort>
-		<objectName>id</objectName>
+		<objectName table="example">id</objectName>
 		<sortDirection>ASC</sortDirection>
 	</sort>
 	<errorMsg>
